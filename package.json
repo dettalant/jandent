@@ -1,0 +1,19 @@
+{
+  "name": "jandent",
+  "version": "0.1.0",
+  "main": "jandent.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "yarn run build:development",
+    "build:development": "rollup -c",
+    "build:production": "NODE_ENV=production rollup -c"
+  },
+  "devDependencies": {
+    "rollup": "^1.16.7",
+    "rollup-plugin-buble": "^0.19.8",
+    "rollup-plugin-typescript2": "^0.22.0",
+    "rollup-plugin-uglify": "^6.0.2",
+    "typescript": "^3.5.3"
+  }
+}
