@@ -7,7 +7,7 @@ const scriptArgs = {
   name: process.env.npm_package_name,
   version: process.env.npm_package_version,
   license: process.env.npm_package_license,
-  repoUrl: "https://github.com/dettalant/fc2_comment_avatar| dettalant/fc2_comment_avatar",
+  repoUrl: "https://github.com/dettalant/" + process.env.npm_package_name,
 }
 
 const bannerComment = `/*!
@@ -20,7 +20,9 @@ const bannerComment = `/*!
  */`;
 
 const plugins = [
-  typescript(),
+  typescript({
+    useTsconfigDeclarationDir: true
+  }),
   buble(),
 ];
 

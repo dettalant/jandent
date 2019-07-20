@@ -10,7 +10,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "declaration": true,
-    "declarationDir": "./types"
+    "declarationDir": "./dist/types"
   },
   "include": [
     "src/**/*"
