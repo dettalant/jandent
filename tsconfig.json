@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "es6",
+    "esModuleInterop": true,
     "charset": "utf8",
     "sourceMap": true,
     "strict": true,
@@ -10,13 +11,17 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "declaration": true,
-    "declarationDir": "./dist/types"
+    "declarationDir": "./dist/types",
+    "baseUrl": "./src/",
+    "paths": {
+      "#/*": ["*"]
+    }
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
   ]
 }
