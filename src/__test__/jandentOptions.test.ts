@@ -1,6 +1,7 @@
 import { Jandent } from "#/index";
 import { JandentArgs } from "#/interfaces";
 
+// JandentOptionsに関するテスト
 describe("jandentOptions", () => {
 
   const defaultSettingJandent = new Jandent();
