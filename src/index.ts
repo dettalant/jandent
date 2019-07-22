@@ -1,10 +1,17 @@
-import { JandentArgs, JandentOptions, TargetChars } from "./interfaces";
+import {
+  JandentArgs,
+  JandentOptions,
+  JandentConvertResult,
+  JandentLintResult,
+  JandentResult,
+  TargetChars
+} from "./interfaces";
 //import { JandentError } from "./error";
 
 /**
  * JandentスクリプトのRoot Classとなるやつ
  */
-export class Jandent {
+export class Jandent implements JandentArgs {
   options: JandentOptions;
   chars: TargetChars;
 
@@ -33,6 +40,46 @@ export class Jandent {
     if (this.options.isConvertHarfExclam) {
       this.appendHarfExclamReplaceSetting();
     }
+  }
+
+  /**
+   * 文字列を受け取って、それを適切な形に整形して返す
+   * @param  text 受け取る小説文字列
+   * @return      変換した文字列を含んだResult型
+   */
+  public convert(text: string): JandentConvertResult {
+    // TODO: 現状では処理は行わずそのまま返しているので、また処理を実装する
+    return {
+      type: "convert",
+      some: text
+    };
+  }
+
+  /**
+   * 文字列を受け取って、その内容のどこが変換対象であったかを返す
+   * @param  text 受け取る小説文字列
+   * @return      lint結果を含んだResult型
+   */
+  public lint(_text: string): JandentLintResult {
+    // TODO: 現状では処理は行わず空の配列を返す
+    return {
+      type: "lint",
+      some: []
+    }
+  }
+
+  /**
+   * 文字列を受け取ってその内容を変換し、
+   * また変換対象であったリストをまとめて配列として返す。
+   *
+   * @param  text 受け取る小説文字列
+   * @return      [convertResult, lintResult]
+   */
+  public run(text: string): JandentResult[] {
+    const lintResult = this.lint(text);
+    const convertResult = this.convert(text);
+
+    return [convertResult, lintResult]
   }
 
   /**

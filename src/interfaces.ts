@@ -73,3 +73,18 @@ export interface TargetChars {
 export interface ReplaceStringObj {
   [s: string]: string;
 }
+
+export interface JandentResult {
+  type: "convert" | "lint";
+  some: string | string[];
+}
+
+export interface JandentConvertResult extends JandentResult {
+  type: "convert";
+  some: string;
+}
+
+export interface JandentLintResult extends JandentResult {
+  type: "lint";
+  some: string[];
+}
