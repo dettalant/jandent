@@ -2,7 +2,7 @@
 /**
  * Jandent初期化時に求められる引数オブジェクト
  */
-interface JandentInitArgs {
+export interface JandentArgs {
   // 変換対象とみなされる文字の配列まとめ
   chars: TargetChars;
   // 変換時の設定まとめ
@@ -17,7 +17,7 @@ interface JandentInitArgs {
  *  + exclam: exclamation
  *  + consec: consecutive
  */
-interface JandentOptions {
+export interface JandentOptions {
   // アラビア数字を漢数字に変換する
   isConvertArabicNum: boolean;
   // 行頭字下げを行う
@@ -39,12 +39,15 @@ interface JandentOptions {
   // 特定の文字列が連続している場合に除去
   // どの文字を判定対象とみなすかはTargetChars.forbidConsecCharsで指定する
   isRemoveConsecSpecificChars: boolean;
+  // 半角感嘆符を全角感嘆符に変換する
+  isConvertHarfExclam: boolean;
 }
 
 /**
  * 変換時の判定対象とする文字を登録する配列まとめオブジェクト
  */
-interface TargetChars {
+export interface TargetChars {
+  replaceStrings: ReplaceStringObj;
   // 連続出現を禁止する文字の配列
   forbidConsecChars: string[];
   // 始め括弧としてみなされる文字の配列
@@ -61,4 +64,12 @@ interface TargetChars {
   leaders: string[];
   // 空白としてみなされる文字の配列
   spaces: string[];
+}
+
+/**
+ * 文字置換に用いる変換対象文字と変換後文字の組み合わせ
+ * key側が変換対象文字、value側が変換後文字となる
+ */
+export interface ReplaceStringObj {
+  [s: string]: string;
 }
