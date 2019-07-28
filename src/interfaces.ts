@@ -64,6 +64,18 @@ export interface TargetChars {
   leaders: string[];
   // 空白としてみなされる文字の配列
   spaces: string[];
+  // 処理の中で用いる改行コード
+  newline: string;
+}
+
+/**
+ * 処理中の一時的なステートを格納するオブジェクト
+ */
+export interface JandentStates {
+  // lint処理を行うか否かのbool
+  isLint: boolean;
+  // 現在処理中行の行番号。非ゼロの整数値。
+  lineNumber: number;
 }
 
 /**
@@ -76,7 +88,20 @@ export interface ReplaceStringObj {
 
 export interface JandentResult {
   type: "convert" | "lint";
-  some: string | string[];
+  some: string | LintData[];
+}
+
+export interface LintData {
+  // 検出対象が発見された行番号
+  line: number;
+  // 検出対象が発見された初めの列番号
+  columnBegin: number;
+  // 検出対象が発見された終わりの列番号
+  columnEnd: number;
+  // 検出対象となった部分の文字列
+  detected: string;
+  // どの項目で検出されたか
+  kind: string;
 }
 
 export interface JandentConvertResult extends JandentResult {
@@ -86,5 +111,5 @@ export interface JandentConvertResult extends JandentResult {
 
 export interface JandentLintResult extends JandentResult {
   type: "lint";
-  some: string[];
+  some: LintData[];
 }
