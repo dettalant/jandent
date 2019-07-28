@@ -166,36 +166,54 @@ export class Jandent implements JandentArgs {
 
     if (this.options.isRemovePuncBeforeBrackets) {
       // 終わり括弧前の句読点を除去
+      this.removeSpecificCharsBeforeChars(line, this.chars.rightBrackets, this.chars.puncs, lintData);
     }
+    
     if (this.options.isUnifyDoubleDash) {
       // 単体ダッシュ記号"―"を二つに統一
-      this.unifyDoubleChar(line, this.chars.dashs, lintData);
+      this.unifyDoubleChars(line, this.chars.dashs, lintData);
     }
 
     if (this.options.isUnifyDoubleLeaders) {
       // 単体三点リーダ記号"…"を二つに統一
-      this.unifyDoubleChar(line, this.chars.leaders, lintData);
+      this.unifyDoubleChars(line, this.chars.leaders, lintData);
     }
 
     if (this.options.isRemoveConsecPunc) {
       // 連続した句読点のうち、ふたつ目以降を除去
+      this.removeConsecSpecificChars(line, this.chars.puncs, true, lintData);
     }
+
     if (this.options.isRemoveExclamAfterPunc) {
       // 感嘆符・疑問符直後の句読点を除去
+      this.removeSpecificCharsAfterChars(line, this.chars.exclams, this.chars.puncs, lintData);
     }
+
     if (this.options.isInsertSpaceAfterExclam) {
-      // 感嘆符直後に終わり括弧を除く文字があった場合空白を挿入
+      // 感嘆符・疑問符直後に終わり括弧か空白を除く文字があった場合空白を挿入
+      this.insertStrToAfterSpecificChars(
+        line,
+        // 疑問符・感嘆符を判定
+        this.chars.exclams,
+        // 全角スペースを挿入
+        "　",
+        // 終わり鉤括弧 + 空白文字が続く場合は判定除外対象とする
+        this.chars.rightBrackets.concat(this.chars.spaces),
+        lintData,
+      );
     }
-    if (this.options.isRemoveTrailingSpaces) {
-      // 行末の空白を削除
-    }
+
     if (this.options.isRemoveConsecSpecificChars) {
       // 特定の文字列が連続している場合に除去
+      this.removeConsecSpecificChars(line, this.chars.forbidConsecChars, false, lintData);
     }
 
     if (Object.keys(this.chars.replaceStrings).length !== 0) {
       // 置換設定が一つ以上付け足されているならそれを順繰りに処理する
     }
+
+    // lint対象から除外する処理
+    // * removeTrailingSpaces()
 
     return [];
   }
@@ -212,27 +230,40 @@ export class Jandent implements JandentArgs {
 
     if (this.options.isRemovePuncBeforeBrackets) {
       // 終わり括弧前の句読点を除去
+      line = this.removeSpecificCharsBeforeChars(line, this.chars.rightBrackets, this.chars.puncs)
     }
     // 単体ダッシュ記号"―"を二つに統一する処理
     if (this.options.isUnifyDoubleDash) {
-      line = this.unifyDoubleChar(line, this.chars.dashs);
+      line = this.unifyDoubleChars(line, this.chars.dashs);
     }
 
     if (this.options.isUnifyDoubleLeaders) {
       // 単体三点リーダ記号"…"を二つに統一
-      line = this.unifyDoubleChar(line, this.chars.leaders)
+      line = this.unifyDoubleChars(line, this.chars.leaders)
     }
     if (this.options.isRemoveConsecPunc) {
       // 連続した句読点のうち、ふたつ目以降を除去
+      line = this.removeConsecSpecificChars(line, this.chars.puncs, true);
     }
     if (this.options.isRemoveExclamAfterPunc) {
       // 感嘆符・疑問符直後の句読点を除去
+      line = this.removeSpecificCharsAfterChars(line, this.chars.exclams, this.chars.puncs);
     }
     if (this.options.isInsertSpaceAfterExclam) {
-      // 感嘆符直後に終わり括弧を除く文字があった場合空白を挿入
+      // 感嘆符・疑問符直後に終わり括弧か空白を除く文字があった場合空白を挿入
+      line = this.insertStrToAfterSpecificChars(
+        line,
+        // 疑問符・感嘆符を判定
+        this.chars.exclams,
+        // 全角スペースを挿入
+        "　",
+        // 終わり鉤括弧 + 空白文字が続く場合は判定除外対象とする
+        this.chars.rightBrackets.concat(this.chars.spaces)
+      );
     }
     if (this.options.isRemoveConsecSpecificChars) {
       // 特定の文字列が連続している場合に除去
+      line = this.removeConsecSpecificChars(line, this.chars.forbidConsecChars, false);
     }
 
     if (Object.keys(this.chars.replaceStrings).length !== 0) {
@@ -284,7 +315,7 @@ export class Jandent implements JandentArgs {
       isRemoveConsecPunc: true,
       // 感嘆符・疑問符直後の句読点を除去
       isRemoveExclamAfterPunc: true,
-      // 感嘆符直後に終わり括弧を除く文字があった場合空白を挿入
+      // 感嘆符・疑問符直後に終わり括弧と空白を除く文字があった場合空白を挿入
       isInsertSpaceAfterExclam: true,
       // 行末の空白を削除
       isRemoveTrailingSpaces: true,
@@ -432,7 +463,7 @@ export class Jandent implements JandentArgs {
    * @param  lintData lint処理時にlint判定結果を追加する配列。省略可。
    * @return          変換後の行テキスト
    */
-  unifyDoubleChar(line: string, chars: string[], lintData: LintData[] | null = null): string {
+  unifyDoubleChars(line: string, chars: string[], lintData: LintData[] | null = null): string {
     // chars配列内の文字列を正規表現にしやすい形に結合整形
     const charsStr = chars.join("");
 
@@ -465,19 +496,23 @@ export class Jandent implements JandentArgs {
     // 一旦処理するべき箇所を取得してからforループを回す
     const loopLen = insertIdxArray.length;
     for (let i = 0; i < loopLen; i++) {
+      const matchBeginIdx = insertIdxArray[i];
+      const matchChar = insertCharArray[i];
+
       // ループごとに一文字ずつダッシュ記号を追加するので、
       // `取得したindex数値 + ループ周回数`で正しい数値が取れるはず
-      const idx = insertIdxArray[i] + i;
+      const idx = matchBeginIdx + i;
       // 文字列を二つに切り分けて、その間に追加するべき文字を追加し再結合
-      line = line.slice(0, idx) + insertCharArray[i] + line.slice(idx);
-
+      line = line.slice(0, idx) + matchChar + line.slice(idx);
       if (this.isLint && lintData !== null) {
         // lint結果をlintData配列に追加する
         lintData.push({
           line: this.lineNumber,
-          columnBegin: insertIdxArray[i] - 1,
-          columnEnd: insertIdxArray[i],
-          detected: insertCharArray[i],
+          columnBegin: matchBeginIdx,
+          // 単一の文字を判定する部分なので、
+          // columnEndは常にmatchBeginIdx + 1で出る
+          columnEnd: matchBeginIdx + 1,
+          detected: matchChar,
           kind: "SingleUsedSpecificChar"
         })
       }
@@ -488,32 +523,240 @@ export class Jandent implements JandentArgs {
 
   /**
    * 特定の文字が連続して現れている場合、それを削除する。
-   * 特定の文字の指定は`TargetChars.forbidConsecChars`から行う。
+   * isStrictフラグがfalseの場合は、「単一のマッチ対象文字」の連続を除外する。
+   * isStrictフラグがtrueの場合は、「マッチ対象文字同士」の連続であっても除外判定とする。
    * @param  line     行テキスト
+   * @param  chars    特定の文字として認識する文字の配列
    * @param  lintData lint処理時にlint判定結果を追加する配列。省略可。
    * @return          変換後の行テキスト
    */
-  removeConsecSpecificChars(line: string, _lintData: LintData[] | null = null): string {
-    const charsStr = this.chars.forbidConsecChars.join("");
-    const regex = new RegExp("[" + charsStr + "]{2,}", "g");
+  removeConsecSpecificChars(line: string, chars: string[], isStrict: boolean, lintData: LintData[] | null = null): string {
+    const charsStr = chars.join("");
+    // isStrictフラグで判定させる正規表現を変更
+    const regex = (isStrict)
+      ? new RegExp("[" + charsStr + "]{2,}", "g")
+      : new RegExp("([" + charsStr + "])\\1+", "g");
 
     // 文字を追加で挿入するべきindex数値を入れる配列
-    const insertIdxArray = [];
+    const matchIdxArray = [];
     // 取得したindex数値部分へ追加する文字の配列
-    const matchCharArray = [];
+    const matchStrArray = [];
 
     // regex.exec()で生成されるtmp配列
     let tmpRegexArray;
 
     // マッチする限りはループを回し続ける
     while (tmpRegexArray = regex.exec(line)) {
-      insertIdxArray.push(tmpRegexArray.index);
-      matchCharArray.push(tmpRegexArray[0]);
+      // 文字列操作に用いるインデックス数字とマッチした文字列を保管
+      matchIdxArray.push(tmpRegexArray.index);
+      matchStrArray.push(tmpRegexArray[0]);
     }
 
-    const loopLen = insertIdxArray.length;
+    // ループ回数
+    const loopLen = matchIdxArray.length;
+    // 除外されて無くなった文字数のlength
+    let consumeCharLen = 0;
     for (let i = 0; i < loopLen; i++) {
-      console.log(insertIdxArray[i]);
+      // 使いやすい変数名で変数束縛
+      const matchStr = matchStrArray[i];
+      const matchStrLen = matchStr.length;
+      // マッチ初めのインデックス数値
+      const matchBeginIdx = matchIdxArray[i];
+
+      // 初回ループでは取得インデックス数値をそのまま、
+      // 二回目以降のループでは取得インデックスから除外された文字数を引いたものをインデックス数として用いる
+      const idx = (i === 0) ? matchBeginIdx : matchBeginIdx - consumeCharLen;
+
+      // マッチ部分を除いた形で切り出して、マッチ部分の一文字目だけを間に入れて文字列結合させる
+      line = line.slice(0, idx) + matchStr.slice(0, 1) + line.slice(idx + matchStrLen)
+
+      // 除外した文字列数を足し合わせる
+      // 一周回で足し合わせるのは`マッチ文字列数 - 1文字`でよい
+      consumeCharLen += matchStrLen - 1;
+
+      if (this.isLint && lintData !== null) {
+        // lint結果をlintData配列に追加する
+        lintData.push({
+          line: this.lineNumber,
+          columnBegin: matchBeginIdx,
+          columnEnd: matchBeginIdx + matchStrLen,
+          detected: matchStr,
+          kind: "ConsecutiveSpecificChar"
+        })
+      }
+    }
+
+    return line;
+  }
+
+  /**
+   * 一つ以上続く特定の文字の後に別の特定文字が来ている場合、
+   * 後者の文字を削除する
+   * @param  line        行テキスト
+   * @param  chars       特定の文字として認識する文字の配列
+   * @param  removeChars 削除対象文字として認識する文字の配列
+   * @param  _lintData   lint処理時にlint判定結果を追加する配列。省略可。
+   * @return             変換後の行テキスト
+   */
+  removeSpecificCharsAfterChars(line: string, chars: string[], removeChars: string[], lintData: LintData[] | null = null): string {
+    const charsStr = chars.join("");
+    const removeCharsStr = removeChars.join("");
+    const regex = new RegExp("([" + charsStr +"]+)([" + removeCharsStr + "]+)", "g");
+
+    // lint時のみ行われる処理
+    if (this.isLint && lintData !== null) {
+      // 文字を追加で挿入するべきindex数値を入れる配列
+      const matchIdxArray = [];
+      // 取得したindex数値部分へ追加する文字の配列
+      const matchStrArray = [];
+
+      // regex.exec()で生成されるtmp配列
+      let tmpRegexArray;
+
+      // マッチする限りはループを回し続ける
+      while (tmpRegexArray = regex.exec(line)) {
+        // 文字列操作に用いるインデックス数字とマッチした文字列を保管
+        matchIdxArray.push(tmpRegexArray.index);
+        matchStrArray.push(tmpRegexArray[0]);
+      }
+      // ループ回数
+      const loopLen = matchIdxArray.length;
+      // 除外されて無くなった文字数のlength
+
+      for (let i = 0; i < loopLen; i++) {
+        const matchBeginIdx = matchIdxArray[i];
+        const matchStr = matchStrArray[i];
+        const matchStrLen = matchStr.length;
+        // lint結果をlintData配列に追加する
+        lintData.push({
+          line: this.lineNumber,
+          columnBegin: matchBeginIdx,
+          columnEnd: matchBeginIdx + matchStrLen,
+          detected: matchStr,
+          kind: "SpecificCharAfterOtherSpecificChars"
+        })
+      }
+    }
+
+    return line.replace(regex, "$1");
+  }
+
+  /**
+   * 一つ以上続く特定の文字直前に別の特定文字が存在する場合、
+   * 前者の文字を削除する
+   *
+   * 処理内容はほぼremoveSpecificCharsAfterChars()のコンパチ
+   *
+   * @param  line        行テキスト
+   * @param  chars       特定の文字として認識する文字の配列
+   * @param  removeChars 削除対象文字として認識する文字の配列
+   * @param  _lintData   lint処理時にlint判定結果を追加する配列。省略可。
+   * @return             変換後の行テキスト
+   */
+  removeSpecificCharsBeforeChars(line: string, chars: string[], removeChars: string[], lintData: LintData[] | null = null): string {
+    const charsStr = chars.join("");
+    const removeCharsStr = removeChars.join("");
+    const regex = new RegExp("([" + removeCharsStr +"]+)([" + charsStr + "]+)", "g");
+
+    // lint時のみ行われる処理
+    if (this.isLint && lintData !== null) {
+      // 文字を追加で挿入するべきindex数値を入れる配列
+      const matchIdxArray = [];
+      // 取得したindex数値部分へ追加する文字の配列
+      const matchStrArray = [];
+
+      // regex.exec()で生成されるtmp配列
+      let tmpRegexArray;
+
+      // マッチする限りはループを回し続ける
+      while (tmpRegexArray = regex.exec(line)) {
+        // 文字列操作に用いるインデックス数字とマッチした文字列を保管
+        matchIdxArray.push(tmpRegexArray.index);
+        matchStrArray.push(tmpRegexArray[0]);
+      }
+      // ループ回数
+      const loopLen = matchIdxArray.length;
+      // 除外されて無くなった文字数のlength
+
+      for (let i = 0; i < loopLen; i++) {
+        const matchBeginIdx = matchIdxArray[i];
+        const matchStr = matchStrArray[i];
+        const matchStrLen = matchStr.length;
+        // lint結果をlintData配列に追加する
+        lintData.push({
+          line: this.lineNumber,
+          columnBegin: matchBeginIdx,
+          columnEnd: matchBeginIdx + matchStrLen,
+          detected: matchStr,
+          kind: "SpecificCharBeforeOtherSpecificChars"
+        })
+      }
+    }
+
+    return line.replace(regex, "$2");
+  }
+
+  /**
+   * 特定の文字の後ろへと、insertStrで指定した文字列を挿入する。
+   * excludeCharsを指定している場合は、
+   * 「chars文字の後にexcludeChars文字が来る」場合には文字列を挿入しない。
+   *
+   * @param  line         行テキスト
+   * @param  chars        特定の文字として認識する文字の配列
+   * @param  insertStr    条件を満たしたら挿入される文字列
+   * @param  excludeChars chars文字の次にこれらが続く場合は文字列を挿入しない文字配列。省略可。
+   * @param  _lintData    lint処理時にlint判定結果を追加する配列。省略可。
+   * @return              変換後の行テキスト
+   */
+  insertStrToAfterSpecificChars(line: string, chars: string[], insertStr: string, excludeChars: string[] = [], lintData: LintData[] | null = null) :string {
+    // このboolがtrueの場合はexclude処理を行わない
+    const isNeverExclude = excludeChars.length === 0;
+    const charsStr = chars.join("");
+    const excludeCharsStr = excludeChars.join("");
+
+    // isNeverExclude ? 除外設定なし正規表現 : 除外設定あり正規表現
+    // 除外設定は否定先読みを用いて行う
+    const regex = (isNeverExclude)
+    ? new RegExp("[" + charsStr + "]+", "g")
+    : new RegExp("[" + charsStr + "]+(?![" + excludeCharsStr + "])", "g")
+
+    // 正規表現がマッチした初め部分に当たるインデックス数値が入る配列
+    const matchIdxArray = [];
+    // 取得したindex数値部分へ追加する文字の配列
+    const matchStrArray = [];
+
+    // regex.exec()で生成されるtmp配列
+    let tmpRegexArray;
+
+    // マッチする限りはループを回し続ける
+    while (tmpRegexArray = regex.exec(line)) {
+      // 文字列操作に用いるインデックス数字とマッチした文字列を保管
+      matchIdxArray.push(tmpRegexArray.index);
+      matchStrArray.push(tmpRegexArray[0]);
+    }
+
+    // ループ回数
+    const loopLen = matchIdxArray.length;
+    const insertStrLen = insertStr.length;
+    for (let i = 0; i < loopLen; i++) {
+      const matchStrLen = matchStrArray[i].length;
+      const matchBeginIdx = matchIdxArray[i];
+      // マッチ時開始インデックス数値 + マッチ対象の文字数 + 挿入文字列文字数 * 周回数
+      // 周回数は0から始まるので、一周目では挿入文字列文字数補正はつけない
+      const insertIdx = matchBeginIdx + matchStrLen + insertStrLen * i;
+
+      line = line.slice(0, insertIdx) + insertStr + line.slice(insertIdx);
+
+      if (this.isLint && lintData !== null) {
+        // lint結果をlintData配列に追加する
+        lintData.push({
+          line: this.lineNumber,
+          columnBegin: matchBeginIdx + matchStrLen,
+          columnEnd: matchBeginIdx + matchStrLen,
+          detected: matchStrArray[i],
+          kind: "SpecificCharAfterDisallowedChar"
+        })
+      }
     }
 
     return line;

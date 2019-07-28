@@ -21,9 +21,9 @@ describe("jandent", () => {
     expect(result.type === "lint").toBeTruthy();
   });
 
-  it("jandent.unifyDoubleChar() is specific single char convert to double char ", () => {
+  it("jandent.unifyDoubleChars() is specific single char convert to double char ", () => {
     const charTestText = "単体ダッシュは―ダブルダッシュに。単体三点リーダは…ダブル三点リーダになる";
-    const result = jandent.unifyDoubleChar(charTestText, ["―", "…"])
+    const result = jandent.unifyDoubleChars(charTestText, ["―", "…"])
     expect(result).toBe("単体ダッシュは――ダブルダッシュに。単体三点リーダは……ダブル三点リーダになる");
   });
 
@@ -37,10 +37,40 @@ describe("jandent", () => {
     expect(result).toBe(testText);
   })
 
-  it("jandent.removeConsecSpecificChars() test", () => {
-    const charTestText = "テストだょょ。小さいやゆよとか、ををとかが連続すると検出するょ。"
-    const result = jandent.removeConsecSpecificChars(charTestText);
-    console.log("result: " + result);
+  it("jandent.removeConsecSpecificChars() disable strict mode test", () => {
+    const charTestText = "テストだょょ。小さいやゆよとか、ををとかが連続すると検出するょっ。";
+    const result = jandent.removeConsecSpecificChars(charTestText, ["っ", "ょ", "を"], false);
+    expect(result).toBe("テストだょ。小さいやゆよとか、をとかが連続すると検出するょっ。");
+  })
+
+  it("jandent.removeConsecSpecificChars() enable strict mode test", () => {
+    const charTestText = "テストだょょ。小さいやゆよとか、ををとかが連続すると検出するょっ。";
+    const result = jandent.removeConsecSpecificChars(charTestText, ["っ", "ょ", "を"], true);
+    expect(result).toBe("テストだょ。小さいやゆよとか、をとかが連続すると検出するょ。");
+  })
+
+  it("jandent.insertStrToAfterSpecificChars() space exclude test", () => {
+    const charTestText = "感嘆符と疑問符！！？の後には？？スペースを挿入するぜ！　すでにスペースが挿入されている場合は挿入しないぜ！";
+    const result = jandent.insertStrToAfterSpecificChars(charTestText, ["！", "？"], "　", ["　"]);
+    expect(result).toBe("感嘆符と疑問符！！？　の後には？？　スペースを挿入するぜ！　すでにスペースが挿入されている場合は挿入しないぜ！　");
+  })
+
+  it("jandent.insertStrToAfterSpecificChars() never exclude test", () => {
+    const charTestText = "単純に@特定文字が一つ以上表れた@@後に@@@@文字を追加することも出来ます";
+    const result = jandent.insertStrToAfterSpecificChars(charTestText, ["@"], "ok");
+    expect(result).toBe("単純に@ok特定文字が一つ以上表れた@@ok後に@@@@ok文字を追加することも出来ます");
+  })
+
+  it("jandent.removeSpecificCharsAfterChars() test", () => {
+    const charTestText = "感嘆符！。と疑問符？、直後の句読点を削除します。";
+    const result = jandent.removeSpecificCharsAfterChars(charTestText, ["！", "？"], ["、", "。"]);
+    expect(result).toBe("感嘆符！と疑問符？直後の句読点を削除します。");
+  })
+
+  it("jandent.removeSpecificCharsBeforeChars() test", () => {
+    const charTestText = "「終わり鉤括弧直前の句読点を削除します。」";
+    const result = jandent.removeSpecificCharsBeforeChars(charTestText, ["」"], ["、", "。"]);
+    expect(result).toBe("「終わり鉤括弧直前の句読点を削除します」");
   })
 
   // it("lintData test", () => {

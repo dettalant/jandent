@@ -32,7 +32,7 @@ export interface JandentOptions {
   isRemoveConsecPunc: boolean;
   // 感嘆符・疑問符直後の句読点を除去
   isRemoveExclamAfterPunc: boolean;
-  // 感嘆符直後に終わり括弧を除く文字があった場合空白を挿入
+  // 感嘆符・疑問符直後に終わり括弧か空白を除く文字があった場合空白を挿入
   isInsertSpaceAfterExclam: boolean;
   // 行末の空白を削除
   isRemoveTrailingSpaces: boolean;
@@ -91,6 +91,13 @@ export interface JandentResult {
   some: string | LintData[];
 }
 
+/**
+ * lint時に生成する各種lint結果情報
+ *
+ * lint時はテキスト操作を行わないので、
+ * 「テキスト操作に必要なインデックス数値操作を差し引いて」
+ * 値を加えることを忘れないように。
+ */
 export interface LintData {
   // 検出対象が発見された行番号
   line: number;
