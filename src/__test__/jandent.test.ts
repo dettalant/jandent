@@ -73,6 +73,12 @@ describe("jandent", () => {
     expect(result).toBe("「終わり鉤括弧直前の句読点を削除します」");
   })
 
+  it("jandent.lineReplace() test", () => {
+    const charTestText = "初期設定では半角感嘆符!、疑問符?が全角へと変換されます";
+    const result = jandent.lineReplace(charTestText);
+    expect(result).toBe("初期設定では半角感嘆符！、疑問符？が全角へと変換されます");
+  })
+
   // it("lintData test", () => {
   //   const lintData: LintData[] = [];
   //   jandent.insertLineHeadSpace(testText, lintData);

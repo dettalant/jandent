@@ -168,7 +168,7 @@ export class Jandent implements JandentArgs {
       // 終わり括弧前の句読点を除去
       this.removeSpecificCharsBeforeChars(line, this.chars.rightBrackets, this.chars.puncs, lintData);
     }
-    
+
     if (this.options.isUnifyDoubleDash) {
       // 単体ダッシュ記号"―"を二つに統一
       this.unifyDoubleChars(line, this.chars.dashs, lintData);
@@ -621,7 +621,6 @@ export class Jandent implements JandentArgs {
       }
       // ループ回数
       const loopLen = matchIdxArray.length;
-      // 除外されて無くなった文字数のlength
 
       for (let i = 0; i < loopLen; i++) {
         const matchBeginIdx = matchIdxArray[i];
@@ -776,6 +775,24 @@ export class Jandent implements JandentArgs {
     if (regex.test(line)) {
       // 行末空白をまとめて削除
       line = line.replace(regex, "");
+    }
+
+    return line;
+  }
+
+  /**
+   * 一行テキスト内に対して、replaceStringsに応じた置換を行う
+   * @param  line 行テキスト
+   * @return      変換後の行テキスト
+   */
+  lineReplace(line: string): string {
+    const replaceKeys = Object.keys(this.chars.replaceStrings);
+    const loopLen = replaceKeys.length;
+
+    for (let i = 0; i < loopLen; i++) {
+      const key = replaceKeys[i];
+      const value = this.chars.replaceStrings[key];
+      line = line.replace(key, value);
     }
 
     return line;
