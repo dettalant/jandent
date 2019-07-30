@@ -1,4 +1,5 @@
 import typescript from "rollup-plugin-typescript2";
+import resolve from "rollup-plugin-node-resolve";
 import { terser } from "rollup-plugin-terser";
 
 const scriptArgs = {
@@ -18,6 +19,7 @@ const bannerComment = `/*!
  */`;
 
 const plugins = [
+  resolve(),
   typescript({
     useTsconfigDeclarationDir: true
   }),

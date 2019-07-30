@@ -14,7 +14,8 @@
     "declarationDir": "./dist/types",
     "baseUrl": "./src/",
     "paths": {
-      "#/*": ["*"]
+      "#/*": ["*"],
+      "#packages/*": ["../packages/*"]
     }
   },
   "include": [

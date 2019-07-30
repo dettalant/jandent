@@ -155,10 +155,6 @@ export class Jandent implements JandentArgs {
 
 
   lineLint(line: string, lintData: LintData[]) {
-    if (this.options.isConvertArabicNum) {
-      // アラビア数字を英数字に変換する
-    }
-
     // 行頭字下げを行う
     if (this.options.isInsertLineHeadSpace) {
       this.insertLineHeadSpace(line, lintData);
@@ -226,6 +222,7 @@ export class Jandent implements JandentArgs {
 
     if (this.options.isConvertArabicNum) {
       // アラビア数字を英数字に変換する
+      //line = this.convertArabicNum.convert()
     }
 
     // 行頭字下げを行う
