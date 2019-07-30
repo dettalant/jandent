@@ -86,18 +86,13 @@ export interface ReplaceStringObj {
   [s: string]: string;
 }
 
-export interface JandentResult {
-  type: "convert" | "lint";
-  some: string | LintData[];
-}
-
 /**
- * lint時に生成する各種lint結果情報
- *
- * lint時はテキスト操作を行わないので、
- * 「テキスト操作に必要なインデックス数値操作を差し引いて」
- * 値を加えることを忘れないように。
- */
+* lint時に生成する各種lint結果情報
+*
+* lint時はテキスト操作を行わないので、
+* 「テキスト操作に必要なインデックス数値操作を差し引いて」
+* 値を加えることを忘れないように。
+*/
 export interface LintData {
   // 検出対象が発見された行番号
   line: number;
@@ -111,11 +106,27 @@ export interface LintData {
   kind: string;
 }
 
+/**
+ * convert()とlint()で共有する型判定が曖昧なinterface
+ * 使用時にはJandentConvertResultかJandentLintResultのどちらかとして使う
+ */
+export interface JandentResult {
+  type: "convert" | "lint";
+  some: string | LintData[];
+}
+
+
+/**
+ * convert()が返すconvert結果のinterface
+ */
 export interface JandentConvertResult extends JandentResult {
   type: "convert";
   some: string;
 }
 
+/**
+ * lint()が返すlint結果のinterface
+ */
 export interface JandentLintResult extends JandentResult {
   type: "lint";
   some: LintData[];

@@ -219,6 +219,11 @@ export class Jandent implements JandentArgs {
   }
 
   lineConvert(line: string): string {
+    if (Object.keys(this.chars.replaceStrings).length !== 0) {
+      // 置換設定が一つ以上付け足されているならそれを順繰りに処理する
+      line = this.lineReplace(line);
+    }
+
     if (this.options.isConvertArabicNum) {
       // アラビア数字を英数字に変換する
     }
@@ -264,10 +269,6 @@ export class Jandent implements JandentArgs {
     if (this.options.isRemoveConsecSpecificChars) {
       // 特定の文字列が連続している場合に除去
       line = this.removeConsecSpecificChars(line, this.chars.forbidConsecChars, false);
-    }
-
-    if (Object.keys(this.chars.replaceStrings).length !== 0) {
-      // 置換設定が一つ以上付け足されているならそれを順繰りに処理する
     }
 
     if (this.options.isRemoveTrailingSpaces) {
@@ -473,31 +474,16 @@ export class Jandent implements JandentArgs {
     // 二つ以上の特定文字にマッチする正規表現
     const greaterThanTwoRegex = new RegExp("[" + charsStr + "]{2,}", "g");
 
-    // 文字を追加で挿入するべきindex数値を入れる配列
-    const insertIdxArray = [];
-    // 取得したindex数値部分へ追加する文字の配列
-    const insertCharArray = [];
-
-    // regex.exec()で生成されるtmp配列
-    let tmpRegexArray;
-
-    // マッチする限りはループを回し続ける
-    while (tmpRegexArray = regex.exec(line)) {
-      if (!greaterThanTwoRegex.test(tmpRegexArray[0])) {
-        // マッチしない = 単一の特定文字
-
-        // 文字列処理に必要な配列を準備する
-        insertIdxArray.push(tmpRegexArray.index);
-        insertCharArray.push(tmpRegexArray[0]);
-      }
-    }
+    // マッチ文字列とマッチ箇所初めindex数値配列を取得する
+    // その際にgreaterThanTwoRegexで除外判定を行う
+    const [matchStrArray, matchIdxArray] = this.regexMatchAll(line, regex, greaterThanTwoRegex);
 
     // while中に処理するのは怖いので、
     // 一旦処理するべき箇所を取得してからforループを回す
-    const loopLen = insertIdxArray.length;
+    const loopLen = matchIdxArray.length;
     for (let i = 0; i < loopLen; i++) {
-      const matchBeginIdx = insertIdxArray[i];
-      const matchChar = insertCharArray[i];
+      const matchBeginIdx = matchIdxArray[i];
+      const matchChar = matchStrArray[i];
 
       // ループごとに一文字ずつダッシュ記号を追加するので、
       // `取得したindex数値 + ループ周回数`で正しい数値が取れるはず
@@ -525,6 +511,7 @@ export class Jandent implements JandentArgs {
    * 特定の文字が連続して現れている場合、それを削除する。
    * isStrictフラグがfalseの場合は、「単一のマッチ対象文字」の連続を除外する。
    * isStrictフラグがtrueの場合は、「マッチ対象文字同士」の連続であっても除外判定とする。
+   *
    * @param  line     行テキスト
    * @param  chars    特定の文字として認識する文字の配列
    * @param  lintData lint処理時にlint判定結果を追加する配列。省略可。
@@ -537,20 +524,8 @@ export class Jandent implements JandentArgs {
       ? new RegExp("[" + charsStr + "]{2,}", "g")
       : new RegExp("([" + charsStr + "])\\1+", "g");
 
-    // 文字を追加で挿入するべきindex数値を入れる配列
-    const matchIdxArray = [];
-    // 取得したindex数値部分へ追加する文字の配列
-    const matchStrArray = [];
-
-    // regex.exec()で生成されるtmp配列
-    let tmpRegexArray;
-
-    // マッチする限りはループを回し続ける
-    while (tmpRegexArray = regex.exec(line)) {
-      // 文字列操作に用いるインデックス数字とマッチした文字列を保管
-      matchIdxArray.push(tmpRegexArray.index);
-      matchStrArray.push(tmpRegexArray[0]);
-    }
+    // マッチ文字列とマッチ箇所初めindex数値配列を取得する
+    const [matchStrArray, matchIdxArray] = this.regexMatchAll(line, regex);
 
     // ループ回数
     const loopLen = matchIdxArray.length;
@@ -605,20 +580,8 @@ export class Jandent implements JandentArgs {
 
     // lint時のみ行われる処理
     if (this.isLint && lintData !== null) {
-      // 文字を追加で挿入するべきindex数値を入れる配列
-      const matchIdxArray = [];
-      // 取得したindex数値部分へ追加する文字の配列
-      const matchStrArray = [];
-
-      // regex.exec()で生成されるtmp配列
-      let tmpRegexArray;
-
-      // マッチする限りはループを回し続ける
-      while (tmpRegexArray = regex.exec(line)) {
-        // 文字列操作に用いるインデックス数字とマッチした文字列を保管
-        matchIdxArray.push(tmpRegexArray.index);
-        matchStrArray.push(tmpRegexArray[0]);
-      }
+      // マッチ文字列とマッチ箇所初めindex数値配列を取得する
+      const [matchStrArray, matchIdxArray] = this.regexMatchAll(line, regex);
       // ループ回数
       const loopLen = matchIdxArray.length;
 
@@ -659,23 +622,12 @@ export class Jandent implements JandentArgs {
 
     // lint時のみ行われる処理
     if (this.isLint && lintData !== null) {
-      // 文字を追加で挿入するべきindex数値を入れる配列
-      const matchIdxArray = [];
-      // 取得したindex数値部分へ追加する文字の配列
-      const matchStrArray = [];
 
-      // regex.exec()で生成されるtmp配列
-      let tmpRegexArray;
+      // マッチ文字列とマッチ箇所初めindex数値配列を取得する
+      const [matchStrArray, matchIdxArray] = this.regexMatchAll(line, regex);
 
-      // マッチする限りはループを回し続ける
-      while (tmpRegexArray = regex.exec(line)) {
-        // 文字列操作に用いるインデックス数字とマッチした文字列を保管
-        matchIdxArray.push(tmpRegexArray.index);
-        matchStrArray.push(tmpRegexArray[0]);
-      }
       // ループ回数
       const loopLen = matchIdxArray.length;
-      // 除外されて無くなった文字数のlength
 
       for (let i = 0; i < loopLen; i++) {
         const matchBeginIdx = matchIdxArray[i];
@@ -719,20 +671,8 @@ export class Jandent implements JandentArgs {
     ? new RegExp("[" + charsStr + "]+", "g")
     : new RegExp("[" + charsStr + "]+(?![" + excludeCharsStr + "])", "g")
 
-    // 正規表現がマッチした初め部分に当たるインデックス数値が入る配列
-    const matchIdxArray = [];
-    // 取得したindex数値部分へ追加する文字の配列
-    const matchStrArray = [];
-
-    // regex.exec()で生成されるtmp配列
-    let tmpRegexArray;
-
-    // マッチする限りはループを回し続ける
-    while (tmpRegexArray = regex.exec(line)) {
-      // 文字列操作に用いるインデックス数字とマッチした文字列を保管
-      matchIdxArray.push(tmpRegexArray.index);
-      matchStrArray.push(tmpRegexArray[0]);
-    }
+    // マッチ文字列とマッチ箇所初めindex数値配列を取得する
+    const [matchStrArray, matchIdxArray] = this.regexMatchAll(line, regex);
 
     // ループ回数
     const loopLen = matchIdxArray.length;
@@ -796,5 +736,39 @@ export class Jandent implements JandentArgs {
     }
 
     return line;
+  }
+
+  /**
+   * 文字列と判定用正規表現を引数に取り、
+   * マッチした文字の配列とマッチ箇所初めのindex数値の配列を返す
+   *
+   * whileを使った処理は何回書いても危なっかしく感じるので、
+   * この箇所は関数に入れて最低限の触り方にする。
+   *
+   * @param  line          元の文字列
+   * @param  regex         判定基準となる正規表現
+   * @param  excludeRegex  除外判定として用いる正規表現。省略可。
+   * @return       [マッチ文字列配列, マッチindex数値配列]
+   */
+  regexMatchAll(text: string, regex: RegExp, excludeRegex?: RegExp): [string[], number[]]  {
+    // 結果として返す配列
+    const strArray = [];
+    const idxArray = [];
+
+    // regex.exec()で生成されるtmp配列
+    let tmpArray;
+    // マッチする限りはループを回し続ける
+    while (tmpArray = regex.exec(text)) {
+      if (typeof excludeRegex !== "undefined" && excludeRegex.test(tmpArray[0])) {
+        // マッチ内容が除外する正規表現ともマッチするなら除外する
+        continue;
+      }
+
+      // 文字列操作に用いるインデックス数字とマッチした文字列を保管
+      idxArray.push(tmpArray.index);
+      strArray.push(tmpArray[0]);
+    }
+
+    return [strArray, idxArray]
   }
 }
