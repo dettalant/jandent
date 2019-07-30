@@ -1,7 +1,5 @@
 import typescript from "rollup-plugin-typescript2";
-//import buble from "rollup-plugin-buble";
-import { uglify } from "rollup-plugin-uglify";
-
+import { terser } from "rollup-plugin-terser";
 
 const scriptArgs = {
   name: process.env.npm_package_name,
@@ -23,21 +21,19 @@ const plugins = [
   typescript({
     useTsconfigDeclarationDir: true
   }),
-  //buble(),
 ];
 
 let fileName = "./dist/index";
 if (process.env.NODE_ENV === "production") {
   // for production build
   fileName += ".min";
-
-  const uglifyArgs = {
+  const terserOptions = {
     output: {
       comments: "some"
     }
-  };
+  }
 
-  plugins.push(uglify(uglifyArgs));
+  plugins.push(terser(terserOptions));
 }
 
 export default {
