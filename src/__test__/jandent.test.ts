@@ -1,5 +1,4 @@
 import { Jandent } from "#/index";
-import { ConvertArabicNum } from "#packages/convert_arabic_num/src/index";
 // import { LintData } from "#/interfaces";
 
 // jandentに関するテスト
@@ -80,8 +79,10 @@ describe("jandent", () => {
     expect(result).toBe("初期設定では半角感嘆符！、疑問符？が全角へと変換されます");
   })
 
-  it("submodule test", () => {
-    console.log(ConvertArabicNum);
+  it("jandent.convertArabicNum.convert() simple mode test", () => {
+    const includeNumText = "私の戦闘力は530000です";
+    const result = jandent.convertArabicNum.convert(includeNumText);
+    expect(result).toBe("私の戦闘力は五三〇〇〇〇です");
   })
 
   // it("lintData test", () => {

@@ -6,9 +6,11 @@ import {
   JandentLintResult,
   JandentResult,
   JandentStates,
-  TargetChars
+  TargetChars,
+  ReplaceStringObj,
 } from "./interfaces";
 import { JandentError } from "./error";
+import { ConvertArabicNum } from "#packages/convert_arabic_num/src/index";
 
 /**
  * JandentスクリプトのRoot Classとなるやつ
@@ -16,6 +18,8 @@ import { JandentError } from "./error";
 export class Jandent implements JandentArgs {
   options: JandentOptions;
   chars: TargetChars;
+  convertArabicNum: ConvertArabicNum = new ConvertArabicNum();
+
   // constructor内ではclassに属するgetterを呼び出せないので、
   // 泥臭く初期値を入力
   states: JandentStates = {
@@ -222,7 +226,7 @@ export class Jandent implements JandentArgs {
 
     if (this.options.isConvertArabicNum) {
       // アラビア数字を英数字に変換する
-      //line = this.convertArabicNum.convert()
+      line = this.convertArabicNum.convert(line);
     }
 
     // 行頭字下げを行う
@@ -391,6 +395,10 @@ export class Jandent implements JandentArgs {
    */
   public set lineNumber(num: number) {
     this.states.lineNumber = num;
+  }
+
+  public get replaceSettings(): ReplaceStringObj {
+    return this.chars.replaceStrings;
   }
 
   /**
