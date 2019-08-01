@@ -7,7 +7,6 @@ import {
   JandentResult,
   JandentStates,
   TargetChars,
-  ReplaceStringObj,
 } from "./interfaces";
 import { JandentError } from "./error";
 import { ConvertArabicNum } from "#packages/convert_arabic_num/src/index";
@@ -51,6 +50,10 @@ export class Jandent implements JandentArgs {
 
     if (this.options.isConvertHarfExclam) {
       this.appendHarfExclamReplaceSetting();
+    }
+
+    if (this.options.isConvertArabicNum) {
+      this.appendFullNumeralReplaceSetting();
     }
   }
 
@@ -190,7 +193,8 @@ export class Jandent implements JandentArgs {
     }
 
     if (this.options.isInsertSpaceAfterExclam) {
-      // 感嘆符・疑問符直後に終わり括弧か空白を除く文字があった場合空白を挿入
+      // 感嘆符・疑問符直後に終わり括弧か空白を除く文字があった場合
+      // 感嘆符・疑問符直後の句読点処理とかぶるので句読点も除外しておく
       this.insertStrToAfterSpecificChars(
         line,
         // 疑問符・感嘆符を判定
@@ -198,7 +202,8 @@ export class Jandent implements JandentArgs {
         // 全角スペースを挿入
         "　",
         // 終わり鉤括弧 + 空白文字が続く場合は判定除外対象とする
-        this.chars.rightBrackets.concat(this.chars.spaces),
+        this.chars.rightBrackets.concat(this.chars.spaces, this.chars.puncs),
+        true,
         lintData,
       );
     }
@@ -208,7 +213,7 @@ export class Jandent implements JandentArgs {
       this.removeConsecSpecificChars(line, this.chars.forbidConsecChars, false, lintData);
     }
 
-    if (Object.keys(this.chars.replaceStrings).length !== 0) {
+    if (this.chars.replaceMap.size !== 0) {
       // 置換設定が一つ以上付け足されているならそれを順繰りに処理する
     }
 
@@ -219,7 +224,7 @@ export class Jandent implements JandentArgs {
   }
 
   lineConvert(line: string): string {
-    if (Object.keys(this.chars.replaceStrings).length !== 0) {
+    if (this.chars.replaceMap.size !== 0) {
       // 置換設定が一つ以上付け足されているならそれを順繰りに処理する
       line = this.lineReplace(line);
     }
@@ -264,7 +269,8 @@ export class Jandent implements JandentArgs {
         // 全角スペースを挿入
         "　",
         // 終わり鉤括弧 + 空白文字が続く場合は判定除外対象とする
-        this.chars.rightBrackets.concat(this.chars.spaces)
+        this.chars.rightBrackets.concat(this.chars.spaces),
+        true,
       );
     }
     if (this.options.isRemoveConsecSpecificChars) {
@@ -335,8 +341,8 @@ export class Jandent implements JandentArgs {
    */
   public get defaultTargetChars(): TargetChars {
     return {
-      // 置換する検索単語と置換単語のobject
-      replaceStrings: {},
+      // 置換する検索単語と置換単語のMap
+      replaceMap: new Map(),
       // 連続していると二つ目以降が除去される文字
       forbidConsecChars: ["を", "ん", "っ", "ゃ", "ゅ", "ょ"],
       // 始め鉤括弧リスト
@@ -397,8 +403,8 @@ export class Jandent implements JandentArgs {
     this.states.lineNumber = num;
   }
 
-  public get replaceSettings(): ReplaceStringObj {
-    return this.chars.replaceStrings;
+  public get replaceMap(): Map<string, string> {
+    return this.chars.replaceMap;
   }
 
   /**
@@ -426,10 +432,27 @@ export class Jandent implements JandentArgs {
   appendHarfExclamReplaceSetting() {
     // 半角感嘆符を全角感嘆符へ、
     // 半角疑問符を全角疑問符にする設定追加
-    this.chars.replaceStrings["!"] = "！";
-    this.chars.replaceStrings["?"] = "？";
+    this.chars.replaceMap.set("!", "！");
+    this.chars.replaceMap.set("?", "？");
   }
 
+  /**
+   * 各種全角数字を半角数字に置換する設定を加える
+   * convertArabicNumは全角数字の変換に対応させてないので、
+   * isConvertArabicNumがtrueの場合に全角数字を半角数字に変換する
+   */
+  appendFullNumeralReplaceSetting() {
+    // 各種半角数字詰め合わせ配列
+    const halfNumArray = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    // 各種全角数字詰め合わせ配列
+    const fullNumArray = ["０", "１", "２", "３", "４", "５", "６", "７", "８", "９"];
+
+    // 算用数字は0-9までなので、10回のループでよし
+    for (let i = 0; i < 10; i++) {
+      // 各種全角数字を半角数字に変換する設定追加
+      this.chars.replaceMap.set(fullNumArray[i], halfNumArray[i]);
+    }
+  }
   /**
    * 行頭字下げが行われておらず、また行頭次の文字が左鉤括弧でない場合に字下げを行う
    * @param  line     行テキスト
@@ -443,20 +466,22 @@ export class Jandent implements JandentArgs {
     const regex = new RegExp("^[^" + spacesStr + leftBracketsStr + "]");
 
     if (regex.test(line)) {
-      // マッチする = 字下げが必要な行ならば、行頭字下げを行う
-      line = "　" + line;
-
+      // 引数側に手を入れる処理なので、lintを先に行う
       if (this.isLint && lintData !== null) {
         // lint結果をlintData配列に追加する
         lintData.push({
           line: this.lineNumber,
           // 行頭字下げがないことに対するものなので、列番号は0固定でOK
           columnBegin: 0,
-          columnEnd: 0,
-          detected: "",
+          columnEnd: 1,
+          detected: line.slice(0, 1),
           kind: "MissingLineHeadSpace"
         })
       }
+
+      // マッチする = 字下げが必要な行ならば、行頭字下げを行う
+      line = "　" + line;
+
     }
 
     return line;
@@ -657,24 +682,36 @@ export class Jandent implements JandentArgs {
    * excludeCharsを指定している場合は、
    * 「chars文字の後にexcludeChars文字が来る」場合には文字列を挿入しない。
    *
-   * @param  line         行テキスト
-   * @param  chars        特定の文字として認識する文字の配列
-   * @param  insertStr    条件を満たしたら挿入される文字列
-   * @param  excludeChars chars文字の次にこれらが続く場合は文字列を挿入しない文字配列。省略可。
-   * @param  _lintData    lint処理時にlint判定結果を追加する配列。省略可。
-   * @return              変換後の行テキスト
+   * @param  line             行テキスト
+   * @param  chars            特定の文字として認識する文字の配列
+   * @param  insertStr        条件を満たしたら挿入される文字列
+   * @param  excludeChars     chars文字の次にこれらが続く場合は文字列を挿入しない文字配列。省略可。
+   * @param  isExcludeLineEnd trueでいて行末に対象文字がある場合は処理しない
+   * @param  lintData         lint処理時にlint判定結果を追加する配列。省略可。
+   * @return                  変換後の行テキスト
    */
-  insertStrToAfterSpecificChars(line: string, chars: string[], insertStr: string, excludeChars: string[] = [], lintData: LintData[] | null = null) :string {
+  insertStrToAfterSpecificChars(line: string, chars: string[], insertStr: string, excludeChars: string[] = [], isExcludeLineEnd: boolean = false, lintData: LintData[] | null = null) :string {
     // このboolがtrueの場合はexclude処理を行わない
     const isNeverExclude = excludeChars.length === 0;
     const charsStr = chars.join("");
     const excludeCharsStr = excludeChars.join("");
 
+    const includePartStr = (isNeverExclude && isExcludeLineEnd)
+      // exclude処理を行わず、なおかつ行末文字を含まない設定の場合
+      ? "[" + charsStr + "]+."
+      // そうでない場合のデフォルト設定
+      : "[" + charsStr + "]+";
+
+    const excludePartStr = (isExcludeLineEnd)
+      // isExcludeLineEndが有効な場合は、exclude設定後に任意一文字を取得する
+      ? "(?![" + excludeCharsStr + "])."
+      : "(?![" + excludeCharsStr + "])";
+
     // isNeverExclude ? 除外設定なし正規表現 : 除外設定あり正規表現
     // 除外設定は否定先読みを用いて行う
     const regex = (isNeverExclude)
-    ? new RegExp("[" + charsStr + "]+", "g")
-    : new RegExp("[" + charsStr + "]+(?![" + excludeCharsStr + "])", "g")
+    ? new RegExp(includePartStr, "g")
+    : new RegExp(includePartStr + excludePartStr, "g")
 
     // マッチ文字列とマッチ箇所初めindex数値配列を取得する
     const [matchStrArray, matchIdxArray] = this.regexMatchAll(line, regex);
@@ -682,28 +719,37 @@ export class Jandent implements JandentArgs {
     // ループ回数
     const loopLen = matchIdxArray.length;
     const insertStrLen = insertStr.length;
+
+    // 整形し出力するための文字列をクローン
+    let result = line;
+
     for (let i = 0; i < loopLen; i++) {
-      const matchStrLen = matchStrArray[i].length;
+      // isExcludeLineEnd設定が有効な場合は余分な文字列が一文字ついているので、
+      // 一文字分少なく計算しておく
+      const matchStrLen = (isExcludeLineEnd)
+      ? matchStrArray[i].length - 1
+      : matchStrArray[i].length;
       const matchBeginIdx = matchIdxArray[i];
+      // 愚直に書き換えして書き換えして書き換えしてを繰り返す
       // マッチ時開始インデックス数値 + マッチ対象の文字数 + 挿入文字列文字数 * 周回数
       // 周回数は0から始まるので、一周目では挿入文字列文字数補正はつけない
       const insertIdx = matchBeginIdx + matchStrLen + insertStrLen * i;
 
-      line = line.slice(0, insertIdx) + insertStr + line.slice(insertIdx);
+      result = result.slice(0, insertIdx) + insertStr + result.slice(insertIdx);
 
       if (this.isLint && lintData !== null) {
         // lint結果をlintData配列に追加する
         lintData.push({
           line: this.lineNumber,
-          columnBegin: matchBeginIdx + matchStrLen,
-          columnEnd: matchBeginIdx + matchStrLen,
+          columnBegin: matchBeginIdx,
+          columnEnd: matchBeginIdx + matchStrArray[i].length,
           detected: matchStrArray[i],
           kind: "SpecificCharAfterDisallowedChar"
         })
       }
     }
 
-    return line;
+    return result;
   }
 
   /**
@@ -715,8 +761,8 @@ export class Jandent implements JandentArgs {
    * @return      変換後の行テキスト
    */
   removeTrailingSpaces(line: string): string {
-    const spacesStr = this.chars.spaces.join("");
-    const regex = new RegExp("[" + spacesStr  + "]+$");
+    const spacesStr = this.chars.spaces.join("|");
+    const regex = new RegExp("(?:" + spacesStr  + ")+$");
     if (regex.test(line)) {
       // 行末空白をまとめて削除
       line = line.replace(regex, "");
@@ -731,12 +777,7 @@ export class Jandent implements JandentArgs {
    * @return      変換後の行テキスト
    */
   lineReplace(line: string): string {
-    const replaceKeys = Object.keys(this.chars.replaceStrings);
-    const loopLen = replaceKeys.length;
-
-    for (let i = 0; i < loopLen; i++) {
-      const key = replaceKeys[i];
-      const value = this.chars.replaceStrings[key];
+    for (let [key, value] of this.chars.replaceMap) {
       line = line.replace(key, value);
     }
 

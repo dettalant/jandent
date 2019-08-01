@@ -47,7 +47,8 @@ export interface JandentOptions {
  * 変換時の判定対象とする文字を登録する配列まとめオブジェクト
  */
 export interface TargetChars {
-  replaceStrings: ReplaceStringObj;
+  // 置換する検索単語と置換単語のMap
+  replaceMap: Map<string, string>;
   // 連続出現を禁止する文字の配列
   forbidConsecChars: string[];
   // 始め括弧としてみなされる文字の配列
@@ -76,14 +77,6 @@ export interface JandentStates {
   isLint: boolean;
   // 現在処理中行の行番号。非ゼロの整数値。
   lineNumber: number;
-}
-
-/**
- * 文字置換に用いる変換対象文字と変換後文字の組み合わせ
- * key側が変換対象文字、value側が変換後文字となる
- */
-export interface ReplaceStringObj {
-  [s: string]: string;
 }
 
 /**

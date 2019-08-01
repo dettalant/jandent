@@ -1,5 +1,6 @@
 import { Jandent } from "#/index";
 // import { LintData } from "#/interfaces";
+//import fs from "fs";
 
 // jandentに関するテスト
 describe("jandent", () => {
@@ -84,6 +85,12 @@ describe("jandent", () => {
     const result = jandent.convertArabicNum.convert(includeNumText);
     expect(result).toBe("私の戦闘力は五三〇〇〇〇です");
   })
+
+  // it("jandent.lint() test", () => {
+  //   const testText = fs.readFileSync("./test/test.txt", "utf-8");
+  //   const result = jandent.lint(testText);
+  //   console.dir(result);
+  // })
 
   // it("lintData test", () => {
   //   const lintData: LintData[] = [];

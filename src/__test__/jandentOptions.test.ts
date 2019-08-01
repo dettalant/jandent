@@ -6,13 +6,13 @@ describe("jandentOptions", () => {
 
   const defaultSettingJandent = new Jandent();
 
-  it("default jandent replaceStrings has harf exclamation key", () => {
-    const replaceStrings = defaultSettingJandent.chars.replaceStrings;
-    expect(replaceStrings["!"]).toBe("！");
-    expect(replaceStrings["?"]).toBe("？");
+  it("default jandent replaceMap has exclamations value", () => {
+    const replaceMap = defaultSettingJandent.chars.replaceMap;
+    expect(replaceMap.get("!")).toBe("！");
+    expect(replaceMap.get("?")).toBe("？");
   })
 
-  it("if disabled isConvertHarfExclam setting, replaceStrings haven't got harf exclamation key", () => {
+  it("if disabled isConvertHarfExclam setting, replaceMap haven't got harf exclamation key", () => {
     const customInitArg: JandentArgs = ({
       options: {
         isConvertHarfExclam: false
@@ -20,9 +20,27 @@ describe("jandentOptions", () => {
     } as JandentArgs);
 
     const jandent = new Jandent(customInitArg);
-    const replaceStrings = jandent.chars.replaceStrings;
+    const replaceMap = jandent.chars.replaceMap;
 
-    expect(replaceStrings["!"]).toBeUndefined();
-    expect(replaceStrings["?"]).toBeUndefined();
+    expect(replaceMap.get("!")).toBeUndefined();
+    expect(replaceMap.get("?")).toBeUndefined();
+  })
+
+  it("default jandent replaceMap has numeral value", () => {
+    const replaceMap = defaultSettingJandent.chars.replaceMap;
+    expect(replaceMap.get("０")).toBe("0");
+    expect(replaceMap.get("７")).toBe("7");
+  })
+
+  it("if disabled isConvertArabicNum setting, replaceMap haven't got full numeral key", () => {
+    const customInitArg: JandentArgs = ({
+      options: {
+        isConvertArabicNum: false
+      }
+    } as JandentArgs);
+
+    const jandent = new Jandent(customInitArg);
+    const replaceMap = jandent.chars.replaceMap;
+    expect(replaceMap.get("５")).toBeUndefined();
   })
 })
