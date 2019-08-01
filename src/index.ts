@@ -121,6 +121,9 @@ export class Jandent implements JandentArgs {
     const resultType = (this.isLint) ? "lint" : "convert";
     const resultSome = (this.isLint) ? this.lintProcess(text) : this.convertProcess(text);
 
+    // 処理用stateの初期化
+    this.states = this.defaultJandentStates;
+
     return {
       type: resultType,
       some: resultSome
@@ -128,13 +131,11 @@ export class Jandent implements JandentArgs {
   }
 
   convertProcess(text: string): string {
-    let result = "";
     // 正規表現を用いて改行ごとのstring配列として切り分ける
     const textArray = text.split(/\n|\r|\r\n/);
-    const textArrayLen = textArray.length;
 
-    for (let i = 0; i < textArrayLen; i++) {
-      const line = textArray[i];
+    let result = "";
+    for (let line of textArray) {
       // 変換結果に改行コードを付け足して文字列結合
       result += this.lineConvert(line) + this.chars.newline;
     }
@@ -213,12 +214,10 @@ export class Jandent implements JandentArgs {
       this.removeConsecSpecificChars(line, this.chars.forbidConsecChars, false, lintData);
     }
 
-    if (this.chars.replaceMap.size !== 0) {
-      // 置換設定が一つ以上付け足されているならそれを順繰りに処理する
-    }
-
     // lint対象から除外する処理
     // * removeTrailingSpaces()
+    // * lineReplace()
+    // * convertArabicNum.convert()
 
     return [];
   }

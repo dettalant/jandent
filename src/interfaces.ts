@@ -75,7 +75,7 @@ export interface TargetChars {
 export interface JandentStates {
   // lint処理を行うか否かのbool
   isLint: boolean;
-  // 現在処理中行の行番号。非ゼロの整数値。
+  // lint処理に用いる、現在処理中行の行番号。非ゼロの整数値。
   lineNumber: number;
 }
 
