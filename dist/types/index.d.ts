@@ -1,5 +1,5 @@
 import { LintData, JandentArgs, JandentOptions, JandentConvertResult, JandentLintResult, JandentResult, JandentStates, TargetChars } from "./interfaces";
-import { ConvertArabicNum } from "#packages/convert_arabic_num/src/index";
+import ConvertArabicNum from "convert_arabic_num";
 /**
  * JandentスクリプトのRoot Classとなるやつ
  */

@@ -16,6 +16,14 @@ class JandentError {
     }
 }
 
+/*!
+ *   convert_arabic_num.js
+ * See {@link https://github.com/dettalant/convert_arabic_num}
+ *
+ * @author dettalant
+ * @version v0.1.0
+ * @license MIT License
+ */
 // アラビア数字から漢数字への変換機能を提供するクラス
 class ConvertArabicNum {
     constructor(initArgs) {

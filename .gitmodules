@@ -1,3 +1,0 @@
-[submodule "packages/convert_arabic_num"]
-	path = packages/convert_arabic_num
-	url = git@github.com:dettalant/convert_arabic_num.git

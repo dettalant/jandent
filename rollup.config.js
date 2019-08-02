@@ -19,10 +19,10 @@ const bannerComment = `/*!
  */`;
 
 const plugins = [
-  resolve(),
   typescript({
     useTsconfigDeclarationDir: true
   }),
+  resolve(),
 ];
 
 let fileName = "./dist/index";

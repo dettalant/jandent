@@ -9,7 +9,7 @@ import {
   TargetChars,
 } from "./interfaces";
 import { JandentError } from "./error";
-import { ConvertArabicNum } from "#packages/convert_arabic_num/src/index";
+import ConvertArabicNum from "convert_arabic_num";
 
 /**
  * JandentスクリプトのRoot Classとなるやつ
