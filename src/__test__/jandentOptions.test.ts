@@ -22,8 +22,8 @@ describe("jandentOptions", () => {
     const jandent = new Jandent(customInitArg);
     const replaceMap = jandent.chars.replaceMap;
 
-    expect(replaceMap.get("!")).toBeUndefined();
-    expect(replaceMap.get("?")).toBeUndefined();
+    expect(replaceMap.has("!")).toBeFalsy();
+    expect(replaceMap.has("?")).toBeFalsy();
   })
 
   it("default jandent replaceMap has numeral value", () => {
@@ -41,6 +41,25 @@ describe("jandentOptions", () => {
 
     const jandent = new Jandent(customInitArg);
     const replaceMap = jandent.chars.replaceMap;
-    expect(replaceMap.get("５")).toBeUndefined();
+    expect(replaceMap.has("５")).toBeFalsy();
+  })
+
+  it("if toggle isConvertArabicNum or isConvertHarfExclam options, replaceMap value must be switch", () => {
+    const jandent = new Jandent();
+    const replaceMap = jandent.chars.replaceMap;
+    expect(replaceMap.get("０")).toBe("0");
+    expect(replaceMap.get("?")).toBe("？");
+
+    // isConvertArabicNum test
+    jandent.options.isConvertArabicNum = false;
+    expect(replaceMap.has("０")).toBeFalsy();
+    jandent.options.isConvertArabicNum = true;
+    expect(replaceMap.get("０")).toBe("0");
+
+    // isConvertHarfExclam test
+    jandent.options.isConvertHarfExclam = false;
+    expect(replaceMap.has("?")).toBeFalsy();
+    jandent.options.isConvertHarfExclam = true;
+    expect(replaceMap.get("?")).toBe("？");
   })
 })
