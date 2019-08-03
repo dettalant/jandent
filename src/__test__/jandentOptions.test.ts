@@ -53,13 +53,17 @@ describe("jandentOptions", () => {
     // isConvertArabicNum test
     jandent.options.isConvertArabicNum = false;
     expect(replaceMap.has("０")).toBeFalsy();
+    expect(jandent.options.isConvertArabicNum).toBeFalsy();
     jandent.options.isConvertArabicNum = true;
     expect(replaceMap.get("０")).toBe("0");
+    expect(jandent.options.isConvertArabicNum).toBeTruthy();
 
     // isConvertHarfExclam test
     jandent.options.isConvertHarfExclam = false;
     expect(replaceMap.has("?")).toBeFalsy();
+    expect(jandent.options.isConvertHarfExclam).toBeFalsy();
     jandent.options.isConvertHarfExclam = true;
     expect(replaceMap.get("?")).toBe("？");
+    expect(jandent.options.isConvertHarfExclam).toBeTruthy();
   })
 })

@@ -486,13 +486,13 @@ export class Jandent implements JandentArgs {
       /**
        * `jandent.options`の内容値が変更された際に呼び出され、
        * `jandent.chars`などの他部分に変更を波及させる関数
-       * 
-       * @param  _obj  変更がなされたobjectへの参照（未使用）
+       *
+       * @param  _obj  変更がなされたobjectへの参照
        * @param  prop  変更がなされたプロパティの名称
        * @param  value 新しく追加された値のbool
        * @return       エラーが起きなければtrueを返す
        */
-      set(_obj: JandentOptions, prop: string, value: boolean): boolean {
+      set(obj: JandentOptions, prop: string, value: boolean): boolean {
         if (prop === "isConvertHarfExclam" && value) {
           // `options.isConvertHarfExclam = true`がなされれば
           // 半角感嘆符・疑問符置換設定を追加
@@ -511,7 +511,7 @@ export class Jandent implements JandentArgs {
           that.removeFullNumeralReplaceSetting();
         }
 
-        return true;
+        return Reflect.set(obj, prop, value);
       }
     }
   }
