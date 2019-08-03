@@ -1,5 +1,5 @@
-import { Jandent } from "#/index";
-import { JandentArgs } from "#/interfaces";
+import { Jandent } from "../index";
+import { JandentArgs } from "../interfaces";
 
 // JandentOptionsに関するテスト
 describe("jandentOptions", () => {

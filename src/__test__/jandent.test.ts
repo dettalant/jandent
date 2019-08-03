@@ -1,4 +1,4 @@
-import { Jandent } from "#/index";
+import { Jandent } from "../index";
 // import { LintData } from "#/interfaces";
 //import fs from "fs";
 
