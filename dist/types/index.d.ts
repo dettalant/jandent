@@ -106,11 +106,22 @@ export declare class Jandent implements JandentArgs {
      */
     appendHarfExclamReplaceSetting(): void;
     /**
+     * 半角感嘆符・疑問符書き換え設定を削除する
+     * jandent.options内数値の無効化時に呼び出される
+     */
+    removeHarfExclamReplaceSetting(): void;
+    /**
      * 各種全角数字を半角数字に置換する設定を加える
      * convertArabicNumは全角数字の変換に対応させてないので、
      * isConvertArabicNumがtrueの場合に全角数字を半角数字に変換する
      */
     appendFullNumeralReplaceSetting(): void;
+    /**
+     * 各種全角数字書き換え設定を削除する
+     * jandent.options内数値の無効化時に呼び出される
+     */
+    removeFullNumeralReplaceSetting(): void;
+    getOptionsHandler(): ProxyHandler<JandentOptions>;
     /**
      * 行頭字下げが行われておらず、また行頭次の文字が左鉤括弧でない場合に字下げを行う
      * @param  line     行テキスト

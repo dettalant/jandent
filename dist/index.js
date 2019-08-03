@@ -318,7 +318,10 @@ class Jandent {
                 Object.assign(initArgs.chars, args.chars);
             }
         }
-        this.options = initArgs.options;
+        const optionsHandler = this.getOptionsHandler();
+        // 特定の値が変更された際にcharsも書き換えなければならないので、
+        // Proxyを噛ませる
+        this.options = new Proxy(initArgs.options, optionsHandler);
         this.chars = initArgs.chars;
         if (this.options.isConvertHarfExclam) {
             this.appendHarfExclamReplaceSetting();
@@ -649,6 +652,14 @@ class Jandent {
         this.chars.replaceMap.set("?", "？");
     }
     /**
+     * 半角感嘆符・疑問符書き換え設定を削除する
+     * jandent.options内数値の無効化時に呼び出される
+     */
+    removeHarfExclamReplaceSetting() {
+        this.chars.replaceMap.delete("!");
+        this.chars.replaceMap.delete("?");
+    }
+    /**
      * 各種全角数字を半角数字に置換する設定を加える
      * convertArabicNumは全角数字の変換に対応させてないので、
      * isConvertArabicNumがtrueの場合に全角数字を半角数字に変換する
@@ -663,6 +674,54 @@ class Jandent {
             // 各種全角数字を半角数字に変換する設定追加
             this.chars.replaceMap.set(fullNumArray[i], halfNumArray[i]);
         }
+    }
+    /**
+     * 各種全角数字書き換え設定を削除する
+     * jandent.options内数値の無効化時に呼び出される
+     */
+    removeFullNumeralReplaceSetting() {
+        const fullNumArray = ["０", "１", "２", "３", "４", "５", "６", "７", "８", "９"];
+        for (let i = 0; i < 10; i++) {
+            // 各種全角数字を半角数字に変換する設定追加
+            this.chars.replaceMap.delete(fullNumArray[i]);
+        }
+    }
+    getOptionsHandler() {
+        // optionsHandler関数内で、
+        // Jandentが持つthisメソッドを呼び出すための苦肉の策
+        const that = this;
+        return {
+            /**
+             * `jandent.options`の内容値が変更された際に呼び出され、
+             * `jandent.chars`などの他部分に変更を波及させる関数
+             *
+             * @param  _obj  変更がなされたobjectへの参照（未使用）
+             * @param  prop  変更がなされたプロパティの名称
+             * @param  value 新しく追加された値のbool
+             * @return       エラーが起きなければtrueを返す
+             */
+            set(_obj, prop, value) {
+                if (prop === "isConvertHarfExclam" && value) {
+                    // `options.isConvertHarfExclam = true`がなされれば
+                    // 半角感嘆符・疑問符置換設定を追加
+                    that.appendHarfExclamReplaceSetting();
+                }
+                else if (prop === "isConvertHarfExclam") {
+                    // `options.isConvertHarfExclam = false`がなされれば
+                    // 半角感嘆符・疑問符置換設定を削除
+                    that.removeHarfExclamReplaceSetting();
+                }
+                if (prop === "isConvertArabicNum" && value) {
+                    // `options.isConvertArabicNum = true`がなされれば
+                    // 全角数字置換設定を追加
+                    that.appendFullNumeralReplaceSetting();
+                }
+                else if (prop === "isConvertArabicNum") {
+                    that.removeFullNumeralReplaceSetting();
+                }
+                return true;
+            }
+        };
     }
     /**
      * 行頭字下げが行われておらず、また行頭次の文字が左鉤括弧でない場合に字下げを行う
