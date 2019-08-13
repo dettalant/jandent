@@ -398,7 +398,8 @@ class Jandent {
             // 変換結果に改行コードを付け足して文字列結合
             result += this.lineConvert(line) + this.chars.newline;
         }
-        return result;
+        // 最終行の改行コードを削った値を返す
+        return result.slice(0, -1);
     }
     lintProcess(text) {
         // 正規表現を用いて改行ごとのstring配列として切り分ける
@@ -695,7 +696,7 @@ class Jandent {
              * `jandent.options`の内容値が変更された際に呼び出され、
              * `jandent.chars`などの他部分に変更を波及させる関数
              *
-             * @param  _obj  変更がなされたobjectへの参照
+             * @param  obj  変更がなされたobjectへの参照
              * @param  prop  変更がなされたプロパティの名称
              * @param  value 新しく追加された値のbool
              * @return       エラーが起きなければtrueを返す
